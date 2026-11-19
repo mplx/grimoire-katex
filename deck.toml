@@ -1,0 +1,25 @@
+# The app manifest. Grimoire-katex is a program, a Grimoire plugin, rather than
+# a library: `jvc app install` unpacks the tree and links `bin` onto PATH under
+# the package name, which is the command Grimoire looks for when a book writes
+# `[preprocessor.katex]`. Renaming the package renames the command.
+
+[package]
+name = "grimoire-katex"
+version = "0.1.0"
+description = "A Grimoire preprocessor that typesets TeX maths as MathML while the book is built"
+license = "LGPL-3.0-only"
+authors = ["mplx <mplx@jennifer-lang.dev>"]
+keywords = ["grimoire", "grimoire-plugin", "katex", "mathml", "maths", "documentation"]
+# exec: katex is a separate program.
+capabilities = ["exec"]
+bin = "bin/grimoire-katex"
+
+[package.urls]
+deck = "https://raw.githubusercontent.com/mplx/grimoire-katex/main/deck.toml"
+homepage = "https://github.com/mplx/grimoire-katex"
+
+[engines]
+jennifer = ">=0.26.0"
+
+# No [decks]: the plugin kit (`src/pluginkit.j`) is a copy of Grimoire's one-file
+# kit, not a dependency on the whole Grimoire deck.

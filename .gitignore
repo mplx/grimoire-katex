@@ -1,0 +1,7 @@
+# The example book's build output
+examples/book/site/
+
+# Editors and operating systems
+*.swp
+*~
+.DS_Store

@@ -1,0 +1,68 @@
+#!/bin/sh
+# SPDX-License-Identifier: LGPL-3.0-only
+# SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
+#
+# A stand-in for the katex command line, for src/katex_test.j. It reads the
+# formula on stdin and writes what `katex -F mathml` writes: a `span.katex`
+# around a `<math>` element, `display="block"` under -d, with the formula in
+# the TeX annotation and the arguments in an <mtext>, so a test can see both.
+#
+# The formula steers it:
+#   BROKEN  exit 1 with a Node stack trace, as katex does on a parse error
+#   UNSAFE  draw the formula in the error colour (-c), as katex does for a
+#           command it may not run without --trust
+#   SLOW    sleep first, so a later formula finishes before an earlier one
+#   EMPTY   exit 0 and write nothing
+#
+# FAKE_KATEX_DIR, when set, is where each call leaves a mark while it runs and
+# appends how many were running at once to `peak`.
+
+if [ "${1:-}" = "--version" ]; then
+    echo "0.19.1-fake"
+    exit 0
+fi
+
+display=""
+colour="cc0000"
+args="$*"
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -d) display=' display="block"' ;;
+        -c) colour=$2; shift ;;
+    esac
+    shift
+done
+
+tex=$(cat)
+
+if [ -n "${FAKE_KATEX_DIR:-}" ]; then
+    mark="$FAKE_KATEX_DIR/run.$$"
+    : > "$mark"
+    ls "$FAKE_KATEX_DIR" | grep -c '^run\.' >> "$FAKE_KATEX_DIR/peak"
+    sleep 0.3
+    rm -f "$mark"
+fi
+
+case "$tex" in *SLOW*) sleep 0.5 ;; esac
+case "$tex" in
+    *BROKEN*)
+        echo "/usr/lib/node_modules/katex/dist/katex.js:17690" >&2
+        echo "    throw error;" >&2
+        echo "" >&2
+        echo "ParseError: KaTeX parse error: Undefined control sequence: \\BROKEN at position 1" >&2
+        echo "    at Parser.parse (/usr/lib/node_modules/katex/dist/katex.js:16673:26)" >&2
+        exit 1 ;;
+    *EMPTY*) exit 0 ;;
+esac
+
+escape() {
+    printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+}
+
+body="<mi>x</mi>"
+case "$tex" in
+    *UNSAFE*) body="<mstyle mathcolor=\"#$colour\"><mtext>\\href</mtext></mstyle>" ;;
+esac
+
+printf '<span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"%s><semantics><mrow>%s<mtext>%s</mtext></mrow><annotation encoding="application/x-tex">%s</annotation></semantics></math></span>\n' \
+    "$display" "$body" "$(escape "$args")" "$(escape "$tex")"
