@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.26.0
+# pragma-jennifer-version: >=0.27.0
 
 /**
  * White-box tests for `katex.j`, run by `jennifer test src/katex_test.j` from
@@ -470,7 +470,7 @@ func testAMissingKatexSaysWhatToInstall() {
 }
 
 func oversized() {
-    inlinesIn("a.md", "$`" + strings.repeat("x", MAX_SOURCE + 1) + "`$", 1);
+    inlinesIn("a.md", "$`" + strings.replicate("x", MAX_SOURCE + 1) + "`$", 1);
 }
 
 func testAFormulaOverTheCapThrowsLimit() {

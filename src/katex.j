@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.26.0
+# pragma-jennifer-version: >=0.27.0
 # pragma-jennifer-capability: exec
 
 /**
@@ -319,7 +319,7 @@ func spanText(raw as string) {
     def text as string init strings.replace($raw, "\n", " ");
     if (len($text) >= 2 and strings.startsWith($text, " ") and strings.endsWith($text, " ") and
         strings.trim($text) != "") {
-        return strings.substring($text, 1, len($text) - 1);
+        return $text[1..len($text) - 1];
     }
     return $text;
 }
@@ -376,11 +376,9 @@ export func inlinesIn(chapter as string, text as string, line as int) {
         }
         def stop as int init $close + $size;
         if ($dollar == $i - 1 and $stop < len($chars) and $chars[$stop] == "$") {
-            def tex as string init spanText(strings.join(
-                lists.slice($chars, $i + $size, $close),
-                ""));
+            def tex as string init spanText(strings.join($chars[$i + $size..$close], ""));
             def at as int init $line +
-                strings.count(strings.join(lists.slice($chars, 0, $i), ""), "\n");
+                strings.count(strings.join($chars[..$i], ""), "\n");
             if (strings.trim($tex) == "") {
                 kit.failAt("plugin", $chapter, $at, "the inline formula is empty");
             }
@@ -471,7 +469,7 @@ func elementOf(output as string) {
     if ($start < 0 or $stop < $start) {
         return "";
     }
-    return strings.substring($output, $start, $stop + len("</math>"));
+    return $output[$start..$stop + len("</math>")];
 }
 
 /**
@@ -591,8 +589,8 @@ func keyOf(f as Formula) {
 # element on the next, both at the fence's indentation.
 func displayBlock(markup as string, indent as string) {
     def open as int init strings.indexOf($markup, ">");
-    return $indent + strings.substring($markup, 0, $open + 1) + "\n" + $indent +
-        strings.substring($markup, $open + 1, len($markup));
+    return $indent + $markup[..$open + 1] + "\n" + $indent +
+        $markup[$open + 1..len($markup)];
 }
 
 # rewriteBlock replaces the inline formulas of one block, back to front so the
@@ -602,8 +600,8 @@ func rewriteBlock(text as string, formulas as list of Formula, typeset as map of
     def k as int init len($formulas) - 1;
     while ($k >= 0) {
         def f as Formula init $formulas[$k];
-        $out = strings.substring($out, 0, $f.first) + $typeset[keyOf($f)] +
-            strings.substring($out, $f.last, len($out));
+        $out = $out[..$f.first] + $typeset[keyOf($f)] +
+            $out[$f.last..len($out)];
         $k = $k - 1;
     }
     return $out;
@@ -647,9 +645,7 @@ export func rewrite(
         }
         if ($b < len($blocks) and $blocks[$b].first == $i) {
             def block as Block init $blocks[$b];
-            def text as string init strings.join(
-                lists.slice($lines, $block.first, $block.last + 1),
-                "\n");
+            def text as string init strings.join($lines[$block.first..$block.last + 1], "\n");
             if (len($inlines[$b]) > 0) {
                 $text = rewriteBlock($text, $inlines[$b], $typeset);
             }
@@ -710,9 +706,7 @@ func foundIn(src as string, content as string, inline as bool) {
     }
     def lines as list of string init strings.split($content, "\n");
     for (def block in blocksOf($lines)) {
-        def text as string init strings.join(
-            lists.slice($lines, $block.first, $block.last + 1),
-            "\n");
+        def text as string init strings.join($lines[$block.first..$block.last + 1], "\n");
         def formulas as list of Formula init inlinesIn($src, $text, $block.first + 1);
         $out.blocks[] = $block;
         $out.inlines[] = $formulas;

@@ -19,7 +19,7 @@ deck = "https://raw.githubusercontent.com/mplx/grimoire-katex/main/deck.toml"
 homepage = "https://github.com/mplx/grimoire-katex"
 
 [engines]
-jennifer = ">=0.26.0"
+jennifer = ">=0.27.0"
 
 # No [decks]: the plugin kit (`src/pluginkit.j`) is a copy of Grimoire's one-file
 # kit, not a dependency on the whole Grimoire deck.
