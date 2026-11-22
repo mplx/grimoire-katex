@@ -28,9 +28,11 @@ if [ -n "$unformatted" ]; then
 fi
 echo "ok  format"
 
-# lint exits 0 even with findings, so the findings themselves are the gate.
+# lint exits 0 even with findings, so the findings themselves are the gate:
+# warnings and errors. Info findings (a deprecation notice, L301) are advice
+# and do not fail it.
 findings=$("$JENNIFER" lint $SOURCES 2>&1)
-if [ -n "$findings" ]; then
+if printf '%s\n' "$findings" | grep -qE ': (warning|error):'; then
     printf '%s\n' "$findings" >&2
     exit 1
 fi
