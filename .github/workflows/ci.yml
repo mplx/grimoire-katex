@@ -26,8 +26,8 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     container:
-      # The official Jennifer image. `:dev` tracks main, which the 0.26.0 floor
-      # in deck.toml needs until 0.26.0 is released. Hardcoded because
+      # The official Jennifer image. `:dev` tracks main, which meets the
+      # 0.27.0 floor in deck.toml. Hardcoded because
       # `container.image` does not take the `env` context.
       image: ghcr.io/jennifer-language/jennifer:dev
       # The image runs as a non-root user; the checked-out workspace belongs to
@@ -36,10 +36,14 @@ jobs:
     steps:
       # The image carries the interpreter and nothing else, git included, which
       # actions/checkout needs.
+      # GitHub mounts its own node into a job container; Forgejo's runner does
+      # not, so there the JavaScript actions need Debian's.
       - name: Install git
+        env:
+          NODE: ${{ github.server_url != 'https://github.com' && 'nodejs' || '' }}
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends git
+          apt-get install -y --no-install-recommends git $NODE
           rm -rf /var/lib/apt/lists/*
 
       - uses: actions/checkout@v4
